@@ -45,6 +45,16 @@ Examples:
 [bold green]-c swebench.yaml agent.mode=yolo[/bold green]
 """
 
+STARTUP_COMMAND = (
+    # Remove R2E-Gym test-related files
+    "for f in / /root /testbed; do "
+    "    rm -rf $f/r2e_tests && "
+    "    if grep -qs r2e_tests $f/run_tests.sh; then "
+    "        rm -rf $f/run_tests.sh; "
+    "    fi "
+    "done"
+)
+
 console = Console(highlight=False)
 app = typer.Typer(rich_markup_mode="rich")
 
@@ -88,6 +98,11 @@ def main(
 
     model = get_model(config=config.get("model", {}))
     env = LocalEnvironment(**config.get("environment", {}))
+
+    out = env.execute({"command": STARTUP_COMMAND})
+    if out["returncode"] != 0:
+        raise RuntimeError(f"Error executing startup command: {out}")
+
     agent = InteractiveAgent(model, env, **config.get("agent", {}))
     agent.run(task)  # type: ignore[arg-type]
     if output:
