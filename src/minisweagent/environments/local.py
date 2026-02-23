@@ -1,5 +1,6 @@
 import os
 import platform
+import shlex
 import subprocess
 from typing import Any
 
@@ -39,7 +40,7 @@ class LocalEnvironment:
         """Execute a command in the local environment and return the result as a dict."""
         command = action.get("command", "")
         if command.strip():
-            command = f"{ACTIVATE_VENV_CMD} && {command}"
+            command = f"/bin/bash -c {shlex.quote(ACTIVATE_VENV_CMD + ' && ' + command)}"
         cwd = cwd or self.config.cwd or os.getcwd()
         try:
             result = subprocess.run(
