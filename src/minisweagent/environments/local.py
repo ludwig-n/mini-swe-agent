@@ -9,6 +9,21 @@ from minisweagent.exceptions import Submitted
 from minisweagent.utils.serialize import recursive_merge
 
 
+# Activate the correct virtual environment before running the command provided by the LLM
+ACTIVATE_VENV_CMD = (
+    # SWE-bench Verified, SWE-Gym, SWE-rebench
+    "if [ -d /opt/miniconda3/envs/testbed ]; then "
+    "    conda config --set changeps1 False && "
+    "    . /opt/miniconda3/etc/profile.d/conda.sh && "
+    "    conda activate testbed; "
+    # R2E-Gym
+    "elif [ -f /testbed/.venv/bin/activate ]; then "
+    "    export VIRTUAL_ENV_DISABLE_PROMPT=1 && "
+    "    source /testbed/.venv/bin/activate; "
+    "fi"
+)
+
+
 class LocalEnvironmentConfig(BaseModel):
     cwd: str = ""
     env: dict[str, str] = {}
@@ -23,6 +38,8 @@ class LocalEnvironment:
     def execute(self, action: dict, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
         """Execute a command in the local environment and return the result as a dict."""
         command = action.get("command", "")
+        if command.strip():
+            command = f"{ACTIVATE_VENV_CMD} && {command}"
         cwd = cwd or self.config.cwd or os.getcwd()
         try:
             result = subprocess.run(
