@@ -26,7 +26,7 @@ class LocalEnvironment:
         cwd = cwd or self.config.cwd or os.getcwd()
         try:
             result = subprocess.run(
-                command,
+                "unshare -n " + command,  # block network access
                 shell=True,
                 text=True,
                 cwd=cwd,
