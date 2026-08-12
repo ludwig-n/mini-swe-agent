@@ -1,5 +1,6 @@
 import os
 import platform
+import shlex
 import subprocess
 from typing import Any
 
@@ -26,7 +27,7 @@ class LocalEnvironment:
         cwd = cwd or self.config.cwd or os.getcwd()
         try:
             result = subprocess.run(
-                "unshare -n " + command,  # block network access
+                "unshare -n /bin/sh -c " + shlex.quote(command),  # block network access
                 shell=True,
                 text=True,
                 cwd=cwd,
